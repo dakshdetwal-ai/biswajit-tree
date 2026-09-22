@@ -1,1 +1,845 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Biswajit — Relationship Tree</title>
 
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f5f7fb;
+  color: #172033;
+}
+
+header {
+  background: #ffffff;
+  border-bottom: 1px solid #e5e7eb;
+  padding: 18px 24px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.brand h1 {
+  margin: 0;
+  font-size: 24px;
+}
+
+.brand p {
+  margin: 4px 0 0;
+  color: #6b7280;
+  font-size: 13px;
+}
+
+.actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+button {
+  border: 0;
+  border-radius: 8px;
+  padding: 10px 15px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.primary {
+  background: #2563eb;
+  color: white;
+}
+
+.secondary {
+  background: #eef2ff;
+  color: #1e40af;
+}
+
+.danger {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.logout {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.container {
+  max-width: 1400px;
+  margin: auto;
+  padding: 24px;
+}
+
+.search-box {
+  background: white;
+  padding: 15px;
+  border-radius: 12px;
+  margin-bottom: 20px;
+  border: 1px solid #e5e7eb;
+}
+
+.search-box input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 15px;
+}
+
+.tree-wrapper {
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 30px;
+  min-height: 500px;
+  overflow: auto;
+}
+
+.tree {
+  min-width: max-content;
+  padding: 20px;
+}
+
+.node {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  position: relative;
+}
+
+.card {
+  background: white;
+  border: 2px solid #dbeafe;
+  border-radius: 12px;
+  padding: 13px 18px;
+  min-width: 180px;
+  text-align: center;
+  cursor: pointer;
+  box-shadow: 0 3px 10px rgba(0,0,0,.06);
+  transition: .15s;
+}
+
+.card:hover {
+  border-color: #2563eb;
+  transform: translateY(-2px);
+}
+
+.card-name {
+  font-weight: 700;
+  font-size: 16px;
+}
+
+.card-info {
+  margin-top: 5px;
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.children {
+  display: flex;
+  justify-content: center;
+  gap: 35px;
+  margin-top: 35px;
+  position: relative;
+}
+
+.children::before {
+  content: "";
+  position: absolute;
+  top: -18px;
+  left: 10%;
+  right: 10%;
+  border-top: 2px solid #d1d5db;
+}
+
+.child-node {
+  position: relative;
+}
+
+.child-node::before {
+  content: "";
+  position: absolute;
+  top: -35px;
+  left: 50%;
+  height: 35px;
+  border-left: 2px solid #d1d5db;
+}
+
+.empty {
+  text-align: center;
+  color: #6b7280;
+  padding: 70px 20px;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.45);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 1000;
+}
+
+.modal-backdrop.show {
+  display: flex;
+}
+
+.modal {
+  background: white;
+  width: 100%;
+  max-width: 480px;
+  border-radius: 15px;
+  padding: 24px;
+}
+
+.modal h2 {
+  margin-top: 0;
+}
+
+.field {
+  margin-bottom: 15px;
+}
+
+.field label {
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.field input {
+  width: 100%;
+  padding: 11px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 15px;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.modal-right {
+  display: flex;
+  gap: 8px;
+}
+
+.loading {
+  text-align: center;
+  padding: 50px;
+  color: #6b7280;
+}
+
+@media(max-width:600px) {
+  .container {
+    padding: 12px;
+  }
+
+  .tree-wrapper {
+    padding: 15px;
+  }
+
+  header {
+    padding: 15px;
+  }
+
+  .card {
+    min-width: 150px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header>
+  <div class="brand">
+    <h1>Biswajit</h1>
+    <p>Relationship Tree</p>
+  </div>
+
+  <div class="actions">
+    <button class="primary" onclick="openAddModal(null)">
+      + Add Person
+    </button>
+
+    <button class="logout" onclick="logout()">
+      Logout
+    </button>
+  </div>
+</header>
+
+<div class="container">
+
+  <div class="search-box">
+    <input
+      id="search"
+      type="text"
+      placeholder="Search by name, phone or referral code..."
+      oninput="renderTree()"
+    >
+  </div>
+
+  <div class="tree-wrapper">
+    <div id="tree" class="tree">
+      <div class="loading">Loading...</div>
+    </div>
+  </div>
+
+</div>
+
+<!-- MODAL -->
+
+<div id="modalBackdrop" class="modal-backdrop">
+
+  <div class="modal">
+
+    <h2 id="modalTitle">Add Person</h2>
+
+    <div class="field">
+      <label>Name</label>
+      <input id="nameInput" type="text">
+    </div>
+
+    <div class="field">
+      <label>Phone Number</label>
+      <input id="phoneInput" type="text">
+    </div>
+
+    <div class="field">
+      <label>Referral Code</label>
+      <input id="referralInput" type="text">
+    </div>
+
+    <div class="modal-actions">
+
+      <button
+        id="deleteBtn"
+        class="danger"
+        onclick="deletePerson()"
+        style="display:none"
+      >
+        Delete
+      </button>
+
+      <div class="modal-right">
+        <button class="secondary" onclick="closeModal()">
+          Cancel
+        </button>
+
+        <button class="primary" onclick="savePerson()">
+          Save
+        </button>
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+
+const API =
+  "https://biswajit-tree.dakshdetwal10.workers.dev";
+
+let people = [];
+let editingId = null;
+let parentIdForNewPerson = null;
+
+
+/* =========================
+   LOAD PEOPLE
+========================= */
+
+async function loadPeople() {
+
+  try {
+
+    const response =
+      await fetch(API + "/api/people", {
+        credentials: "include"
+      });
+
+    if (response.status === 401) {
+      window.location.href = "/admin.html";
+      return;
+    }
+
+    if (!response.ok) {
+      throw new Error("Failed to load people");
+    }
+
+    const data = await response.json();
+
+    people = data.people || [];
+
+    renderTree();
+
+  } catch (error) {
+
+    console.error(error);
+
+    document.getElementById("tree").innerHTML =
+      `<div class="empty">
+        Could not connect to the server.
+      </div>`;
+  }
+}
+
+
+/* =========================
+   RENDER TREE
+========================= */
+
+function renderTree() {
+
+  const tree =
+    document.getElementById("tree");
+
+  const search =
+    document
+      .getElementById("search")
+      .value
+      .trim()
+      .toLowerCase();
+
+  if (!people.length) {
+
+    tree.innerHTML =
+      `<div class="empty">
+        No people added yet.<br><br>
+        Click <b>+ Add Person</b> to create the first person.
+      </div>`;
+
+    return;
+  }
+
+  const roots =
+    people.filter(person =>
+      person.parent_id === null
+    );
+
+  if (!roots.length) {
+
+    tree.innerHTML =
+      `<div class="empty">
+        No root person found.
+      </div>`;
+
+    return;
+  }
+
+  tree.innerHTML = "";
+
+  for (const root of roots) {
+
+    const element =
+      createNode(root, search);
+
+    tree.appendChild(element);
+  }
+}
+
+
+/* =========================
+   CREATE NODE
+========================= */
+
+function createNode(person, search) {
+
+  const node =
+    document.createElement("div");
+
+  node.className = "node";
+
+  const card =
+    document.createElement("div");
+
+  card.className = "card";
+
+  const name =
+    escapeHTML(person.name || "");
+
+  const phone =
+    escapeHTML(person.phone || "");
+
+  const referral =
+    escapeHTML(person.referral_code || "");
+
+  card.innerHTML = `
+    <div class="card-name">${name}</div>
+
+    ${
+      phone
+      ? `<div class="card-info">${phone}</div>`
+      : ""
+    }
+
+    ${
+      referral
+      ? `<div class="card-info">
+          Ref: ${referral}
+        </div>`
+      : ""
+    }
+  `;
+
+  card.onclick = () =>
+    openEditModal(person.id);
+
+  node.appendChild(card);
+
+  const children =
+    people.filter(child =>
+      Number(child.parent_id) === Number(person.id)
+    );
+
+  if (children.length) {
+
+    const childrenContainer =
+      document.createElement("div");
+
+    childrenContainer.className =
+      "children";
+
+    for (const child of children) {
+
+      const childNode =
+        document.createElement("div");
+
+      childNode.className =
+        "child-node";
+
+      const childElement =
+        createNode(child, search);
+
+      childNode.appendChild(childElement);
+
+      childrenContainer.appendChild(childNode);
+    }
+
+    node.appendChild(childrenContainer);
+  }
+
+  return node;
+}
+
+
+/* =========================
+   ADD MODAL
+========================= */
+
+function openAddModal(parentId) {
+
+  editingId = null;
+
+  parentIdForNewPerson =
+    parentId;
+
+  document.getElementById("modalTitle")
+    .textContent =
+    parentId
+      ? "Add Person Under"
+      : "Add Person";
+
+  document.getElementById("nameInput")
+    .value = "";
+
+  document.getElementById("phoneInput")
+    .value = "";
+
+  document.getElementById("referralInput")
+    .value = "";
+
+  document.getElementById("deleteBtn")
+    .style.display = "none";
+
+  document.getElementById("modalBackdrop")
+    .classList.add("show");
+}
+
+
+/* =========================
+   EDIT MODAL
+========================= */
+
+function openEditModal(id) {
+
+  const person =
+    people.find(p =>
+      Number(p.id) === Number(id)
+    );
+
+  if (!person) return;
+
+  editingId = id;
+
+  parentIdForNewPerson = null;
+
+  document.getElementById("modalTitle")
+    .textContent = "Edit Person";
+
+  document.getElementById("nameInput")
+    .value = person.name || "";
+
+  document.getElementById("phoneInput")
+    .value = person.phone || "";
+
+  document.getElementById("referralInput")
+    .value = person.referral_code || "";
+
+  document.getElementById("deleteBtn")
+    .style.display = "block";
+
+  document.getElementById("modalBackdrop")
+    .classList.add("show");
+}
+
+
+/* =========================
+   CLOSE MODAL
+========================= */
+
+function closeModal() {
+
+  document.getElementById("modalBackdrop")
+    .classList.remove("show");
+}
+
+
+/* =========================
+   SAVE PERSON
+========================= */
+
+async function savePerson() {
+
+  const name =
+    document.getElementById("nameInput")
+      .value
+      .trim();
+
+  const phone =
+    document.getElementById("phoneInput")
+      .value
+      .trim();
+
+  const referralCode =
+    document.getElementById("referralInput")
+      .value
+      .trim();
+
+  if (!name) {
+
+    alert("Name is required.");
+
+    return;
+  }
+
+  const payload = {
+    name: name,
+    phone: phone,
+    referral_code: referralCode
+  };
+
+  let url;
+  let method;
+
+  if (editingId) {
+
+    url =
+      API + "/api/people/" + editingId;
+
+    method = "PUT";
+
+  } else {
+
+    url =
+      API + "/api/people";
+
+    method = "POST";
+
+    payload.parent_id =
+      parentIdForNewPerson;
+  }
+
+  try {
+
+    const response =
+      await fetch(url, {
+        method: method,
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(payload)
+      });
+
+    if (response.status === 401) {
+
+      window.location.href =
+        "/admin.html";
+
+      return;
+    }
+
+    const data =
+      await response.json();
+
+    if (!response.ok) {
+
+      alert(
+        data.error ||
+        "Something went wrong."
+      );
+
+      return;
+    }
+
+    closeModal();
+
+    await loadPeople();
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert(
+      "Could not connect to the server."
+    );
+  }
+}
+
+
+/* =========================
+   DELETE PERSON
+========================= */
+
+async function deletePerson() {
+
+  if (!editingId) return;
+
+  const person =
+    people.find(p =>
+      Number(p.id) === Number(editingId)
+    );
+
+  if (!person) return;
+
+  const confirmed =
+    confirm(
+      `Delete "${person.name}" and all people under them?`
+    );
+
+  if (!confirmed) return;
+
+  try {
+
+    const response =
+      await fetch(
+        API + "/api/people/" + editingId,
+        {
+          method: "DELETE",
+          credentials: "include"
+        }
+      );
+
+    if (response.status === 401) {
+
+      window.location.href =
+        "/admin.html";
+
+      return;
+    }
+
+    const data =
+      await response.json();
+
+    if (!response.ok) {
+
+      alert(
+        data.error ||
+        "Could not delete person."
+      );
+
+      return;
+    }
+
+    closeModal();
+
+    await loadPeople();
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert(
+      "Could not connect to the server."
+    );
+  }
+}
+
+
+/* =========================
+   LOGOUT
+========================= */
+
+async function logout() {
+
+  try {
+
+    await fetch(
+      API + "/api/logout",
+      {
+        method: "POST",
+        credentials: "include"
+      }
+    );
+
+  } finally {
+
+    window.location.href =
+      "/admin.html";
+  }
+}
+
+
+/* =========================
+   ESCAPE HTML
+========================= */
+
+function escapeHTML(value) {
+
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
+
+
+/* =========================
+   START
+========================= */
+
+loadPeople();
+
+</script>
+
+</body>
+</html>
